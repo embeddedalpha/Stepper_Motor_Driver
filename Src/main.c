@@ -24,15 +24,13 @@
 
 DMA_Config Stepper_Motor_1;
 
-uint32_t signal[10];
+uint32_t signal1[10];
 
 
 int main(void)
 {
 	MCU_Clock_Setup();
 	Delay_Config();
-
-	GPIO_Pin_Init(GPIOA, 8, GPIO_Configuration.Mode.Alternate_Function, GPIO_Configuration.Output_Type.Push_Pull, GPIO_Configuration.Speed.Very_High_Speed, GPIO_Configuration.Pull.No_Pull_Up_Down, GPIO_Configuration.Alternate_Functions.TIM_1);
 
 	GPIO_Pin_Init(GPIOA, 0, GPIO_Configuration.Mode.General_Purpose_Output, GPIO_Configuration.Output_Type.Push_Pull, GPIO_Configuration.Speed.Very_High_Speed, GPIO_Configuration.Pull.No_Pull_Up_Down, GPIO_Configuration.Alternate_Functions.None);
 	GPIO_Pin_Init(GPIOA, 1, GPIO_Configuration.Mode.General_Purpose_Output, GPIO_Configuration.Output_Type.Push_Pull, GPIO_Configuration.Speed.Very_High_Speed, GPIO_Configuration.Pull.No_Pull_Up_Down, GPIO_Configuration.Alternate_Functions.None);
@@ -41,46 +39,48 @@ int main(void)
 	GPIO_Pin_Init(GPIOA, 4, GPIO_Configuration.Mode.General_Purpose_Output, GPIO_Configuration.Output_Type.Push_Pull, GPIO_Configuration.Speed.Very_High_Speed, GPIO_Configuration.Pull.No_Pull_Up_Down, GPIO_Configuration.Alternate_Functions.None);
 	GPIO_Pin_Init(GPIOA, 5, GPIO_Configuration.Mode.General_Purpose_Output, GPIO_Configuration.Output_Type.Push_Pull, GPIO_Configuration.Speed.Very_High_Speed, GPIO_Configuration.Pull.No_Pull_Up_Down, GPIO_Configuration.Alternate_Functions.None);
 
+	uint32_t temp1 = 0;
+	uint32_t temp2 = 0;
 
+	temp1 = 0b001001;
+	temp2 = ~temp1 & 0b111111;
+	signal1[0] = temp2 << 16 | temp1;
 
+	temp1 = 0b100001;
+	temp2 = ~temp1 & 0b111111;
+	signal1[1] = (temp2 << 16) | temp1;
 
-	signal[0] = 0b00000000000000000000000000001001;
-	signal[1] = 0b00000000000000000000000000100001;
-	signal[2] = 0b00000000000000000000000000100100;
-	signal[3] = 0b00000000000000000000000000000110;
-	signal[4] = 0b00000000000000000000000000010010;
-	signal[5] = 0b00000000000000000000000000011000;
-	signal[4] = 0b00000000000000000000000000010010;
-	signal[6] = 0b00000000000000000000000000000000;
-	signal[7] = 0b00000000000000000000000000000000;
-	signal[8] = 0b00000000000000000000000000000000;
-	signal[9] = 0b00000000000000000000000000000000;
+	temp1 = 0b100100;
+	temp2 = ~temp1 & 0b111111;
+	signal1[2] = (temp2 << 16) | temp1;
+
+	temp1 = 0b000110;
+	temp2 = ~temp1 & 0b111111;
+	signal1[3] = (temp2 << 16) | temp1;
+
+	temp1 = 0b010010;
+	temp2 = ~temp1 & 0b111111;
+	signal1[4] = (temp2 << 16) | temp1;
+
+	temp1 = 0b011000;
+	temp2 = ~temp1 & 0b111111;
+	signal1[5] = (temp2 << 16) | temp1;
+
 
 	RCC -> APB2ENR |= RCC_APB2ENR_TIM1EN;
 	TIM1 -> PSC = 16800;
-	TIM1 -> ARR = 1000-1;
-//	TIM1 -> CCMR1 |= TIM_CCMR1_OC1M_2 | TIM_CCMR1_OC1M_1;
-//	TIM1 -> CCMR1 |= TIM_CCMR1_OC1PE;
-//	TIM1 -> BDTR |= TIM_BDTR_BKP | TIM_BDTR_MOE;
-//	TIM1 -> CCER |= TIM_CCER_CC1E;
-	TIM1 -> EGR |= TIM_EGR_UG;
+	TIM1 -> ARR = 1000;
 	TIM1 -> DIER |= TIM_DIER_UDE;
-	TIM1 -> CR2 |= TIM_CR2_MMS_1;
-//	TIM1 -> CR2 |= TIM_CR2_CCDS ;
 
-//    TIM1->CR1 |= TIM_CR1_URS; // Only overflow/underflow generates update interrupt
-//    TIM1->CR1 |= TIM_CR1_ARPE; // Enable auto-reload preload
-
-//    TIM1->CCR1 = 500;
 	Stepper_Motor_1.Request = DMA_Configuration.Request.TIM1_UP;
-	Stepper_Motor_1.buffer_length = 10;
+	Stepper_Motor_1.buffer_length = 6;
 	Stepper_Motor_1.circular_mode = DMA_Configuration.Circular_Mode.Enable;
 	Stepper_Motor_1.flow_control = DMA_Configuration.Flow_Control.DMA_Control;
 	Stepper_Motor_1.interrupts = DMA_Configuration.DMA_Interrupts.Transfer_Complete;
-	Stepper_Motor_1.memory_address = (uint32_t)&signal[0];
+	Stepper_Motor_1.memory_address = (uint32_t)&signal1[0];
 	Stepper_Motor_1.memory_data_size = DMA_Configuration.Memory_Data_Size.word;
 	Stepper_Motor_1.memory_pointer_increment = DMA_Configuration.Memory_Pointer_Increment.Enable;
-	Stepper_Motor_1.peripheral_address = (uint32_t)&(GPIOA->ODR);
+	Stepper_Motor_1.peripheral_address = (uint32_t)&(GPIOA->BSRR);
 	Stepper_Motor_1.peripheral_data_size = DMA_Configuration.Peripheral_Data_Size.word;
 	Stepper_Motor_1.peripheral_pointer_increment = DMA_Configuration.Peripheral_Pointer_Increment.Disable;
 	Stepper_Motor_1.priority_level = DMA_Configuration.Priority_Level.Very_high;
