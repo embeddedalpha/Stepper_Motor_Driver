@@ -1,0 +1,7 @@
+.settings/
+.cproject
+.dist/
+.project
+Stepper_Motor_Driver Debug.launch
+STM32F407VGTX_FLASH.ld
+STM32F407VGTX_RAM.ld
