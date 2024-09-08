@@ -522,7 +522,7 @@ static const struct DMA_Configuration {
 
 				.TIM2_UP = {
 						.Controller = DMA1,
-						.Stream = DMA1_Stream6,
+						.Stream = DMA1_Stream7,
 						.channel = 3,
 				},
 
