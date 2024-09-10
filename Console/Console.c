@@ -34,7 +34,7 @@ DMA_Config serial_DMA;
 
 	x[0] = 0;
 
-	DMA_Memory_To_Memory_Transfer(&x, 8, 8, &buff, 0, 1, 100);
+//	DMA_Memory_To_Memory_Transfer(&x, 8, 8, &buff, 0, 1, 100);
 
 
 	va_list args;
