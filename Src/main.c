@@ -21,10 +21,66 @@
 #include "DMA.h"
 #include "GPIO.h"
 
+#define STEP_MODE_FULL_STEP 4
+#define STEP_MODE_HALF_STEP 7
 
-DMA_Config Stepper_Motor_1;
+typedef struct Stepper_Motor_Typedef{
 
-uint32_t signal1[10];
+	uint8_t Step_Mode;
+
+}Stepper_Motor_Typedef;
+
+
+
+Stepper_Motor_Typedef Stepper_Motor_1;
+
+uint32_t full_step[4];
+
+uint32_t half_step[8];
+
+
+
+uint8_t step = 0;
+
+void TIM6_DAC_IRQHandler(void)
+{
+	TIM6 -> SR &= ~TIM_SR_UIF;
+
+
+
+	if(Stepper_Motor_1.Step_Mode == STEP_MODE_HALF_STEP)
+	{
+		GPIOA -> BSRR = half_step[step];
+		if(step > STEP_MODE_HALF_STEP){
+			step = 0;
+		}else {
+			step += 1;
+		}
+	}
+	else if(Stepper_Motor_1.Step_Mode == STEP_MODE_FULL_STEP)
+	{
+		GPIOA -> BSRR = full_step[step];
+		if(step > STEP_MODE_FULL_STEP){
+			step = 0;
+		}else {
+			step += 1;
+		}
+	}
+}
+
+
+void General_Timer_Update_Init(void)
+{
+	RCC -> APB1ENR |= RCC_APB1ENR_TIM6EN;
+	TIM6->PSC = 10000-1;
+	TIM6->ARR = 8400-1;
+	TIM6 -> EGR |= TIM_EGR_UG;
+	TIM6->CR1 |= TIM_CR1_URS;
+	TIM6->DIER |=  TIM_DIER_UIE;
+	TIM6->CR1 |= TIM_CR1_CEN;
+	NVIC_SetPriority(TIM6_DAC_IRQn,1);
+	NVIC_EnableIRQ(TIM6_DAC_IRQn);
+}
 
 
 int main(void)
@@ -32,66 +88,38 @@ int main(void)
 	MCU_Clock_Setup();
 	Delay_Config();
 
+	full_step[0] = 0b11111111111111100000000000000001;
+	full_step[1] = 0b11111111111110110000000000000100;
+	full_step[2] = 0b11111111111111010000000000000010;
+	full_step[3] = 0b11111111111101110000000000001000;
+
+	half_step[0] = 0b11111111111111100000000000000001;
+	half_step[1] = 0b11111111111110100000000000000101;
+	half_step[2] = 0b11111111111110110000000000000100;
+	half_step[3] = 0b11111111111110010000000000000110;
+	half_step[4] = 0b11111111111111010000000000000010;
+	half_step[5] = 0b11111111111101010000000000001010;
+	half_step[6] = 0b11111111111101110000000000001000;
+	half_step[7] = 0b11111111111101100000000000001001;
+
+
+	Stepper_Motor_1.Step_Mode = STEP_MODE_HALF_STEP;
+
+	// 1A
 	GPIO_Pin_Init(GPIOA, 0, GPIO_Configuration.Mode.General_Purpose_Output, GPIO_Configuration.Output_Type.Push_Pull, GPIO_Configuration.Speed.Very_High_Speed, GPIO_Configuration.Pull.No_Pull_Up_Down, GPIO_Configuration.Alternate_Functions.None);
+
+	// 1B
 	GPIO_Pin_Init(GPIOA, 1, GPIO_Configuration.Mode.General_Purpose_Output, GPIO_Configuration.Output_Type.Push_Pull, GPIO_Configuration.Speed.Very_High_Speed, GPIO_Configuration.Pull.No_Pull_Up_Down, GPIO_Configuration.Alternate_Functions.None);
+
+	// 2A
 	GPIO_Pin_Init(GPIOA, 2, GPIO_Configuration.Mode.General_Purpose_Output, GPIO_Configuration.Output_Type.Push_Pull, GPIO_Configuration.Speed.Very_High_Speed, GPIO_Configuration.Pull.No_Pull_Up_Down, GPIO_Configuration.Alternate_Functions.None);
+
+	// 2B
 	GPIO_Pin_Init(GPIOA, 3, GPIO_Configuration.Mode.General_Purpose_Output, GPIO_Configuration.Output_Type.Push_Pull, GPIO_Configuration.Speed.Very_High_Speed, GPIO_Configuration.Pull.No_Pull_Up_Down, GPIO_Configuration.Alternate_Functions.None);
-	GPIO_Pin_Init(GPIOA, 4, GPIO_Configuration.Mode.General_Purpose_Output, GPIO_Configuration.Output_Type.Push_Pull, GPIO_Configuration.Speed.Very_High_Speed, GPIO_Configuration.Pull.No_Pull_Up_Down, GPIO_Configuration.Alternate_Functions.None);
-	GPIO_Pin_Init(GPIOA, 5, GPIO_Configuration.Mode.General_Purpose_Output, GPIO_Configuration.Output_Type.Push_Pull, GPIO_Configuration.Speed.Very_High_Speed, GPIO_Configuration.Pull.No_Pull_Up_Down, GPIO_Configuration.Alternate_Functions.None);
-
-	uint32_t temp1 = 0;
-	uint32_t temp2 = 0;
-
-	temp1 = 0b001001;
-	temp2 = ~temp1 & 0b111111;
-	signal1[0] = temp2 << 16 | temp1;
-
-	temp1 = 0b100001;
-	temp2 = ~temp1 & 0b111111;
-	signal1[1] = (temp2 << 16) | temp1;
-
-	temp1 = 0b100100;
-	temp2 = ~temp1 & 0b111111;
-	signal1[2] = (temp2 << 16) | temp1;
-
-	temp1 = 0b000110;
-	temp2 = ~temp1 & 0b111111;
-	signal1[3] = (temp2 << 16) | temp1;
-
-	temp1 = 0b010010;
-	temp2 = ~temp1 & 0b111111;
-	signal1[4] = (temp2 << 16) | temp1;
-
-	temp1 = 0b011000;
-	temp2 = ~temp1 & 0b111111;
-	signal1[5] = (temp2 << 16) | temp1;
 
 
-	RCC -> APB2ENR |= RCC_APB2ENR_TIM1EN;
-	TIM1 -> PSC = 16800;
-	TIM1 -> ARR = 1000;
-	TIM1 -> DIER |= TIM_DIER_UDE;
 
-	Stepper_Motor_1.Request = DMA_Configuration.Request.TIM1_UP;
-	Stepper_Motor_1.buffer_length = 6;
-	Stepper_Motor_1.circular_mode = DMA_Configuration.Circular_Mode.Enable;
-	Stepper_Motor_1.flow_control = DMA_Configuration.Flow_Control.DMA_Control;
-	Stepper_Motor_1.interrupts = DMA_Configuration.DMA_Interrupts.Transfer_Complete;
-	Stepper_Motor_1.memory_address = (uint32_t)&signal1[0];
-	Stepper_Motor_1.memory_data_size = DMA_Configuration.Memory_Data_Size.word;
-	Stepper_Motor_1.memory_pointer_increment = DMA_Configuration.Memory_Pointer_Increment.Enable;
-	Stepper_Motor_1.peripheral_address = (uint32_t)&(GPIOA->BSRR);
-	Stepper_Motor_1.peripheral_data_size = DMA_Configuration.Peripheral_Data_Size.word;
-	Stepper_Motor_1.peripheral_pointer_increment = DMA_Configuration.Peripheral_Pointer_Increment.Disable;
-	Stepper_Motor_1.priority_level = DMA_Configuration.Priority_Level.Very_high;
-	Stepper_Motor_1.transfer_direction = DMA_Configuration.Transfer_Direction.Memory_to_peripheral;
-
-	DMA_Init(&Stepper_Motor_1);
-	DMA_Set_Target(&Stepper_Motor_1);
-	DMA_Set_Trigger(&Stepper_Motor_1);
-
-	TIM1 -> CR1 |= TIM_CR1_CEN;
-
+	General_Timer_Update_Init();
 
 
     /* Loop forever */
@@ -100,3 +128,4 @@ int main(void)
 
 	}
 }
+
