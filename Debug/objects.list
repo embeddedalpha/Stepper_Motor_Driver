@@ -7,4 +7,5 @@
 "./Src/sysmem.o"
 "./Src/system_stm32f4xx.o"
 "./Startup/startup_stm32f407vgtx.o"
+"./Stepper_Motor/Stepper_Motor_HAL/Stepper_Motor_HAL.o"
 "./USART/USART.o"

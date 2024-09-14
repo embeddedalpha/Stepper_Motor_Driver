@@ -28,5 +28,6 @@ DMA \
 GPIO \
 Src \
 Startup \
+Stepper_Motor/Stepper_Motor_HAL \
 USART \
 
