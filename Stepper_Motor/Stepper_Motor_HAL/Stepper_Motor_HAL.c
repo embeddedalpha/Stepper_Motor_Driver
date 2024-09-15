@@ -12,68 +12,63 @@
 
 void TIM6_DAC_IRQHandler(void)
 {
-	TIM6 -> SR &= ~TIM_SR_UIF;
-
-
-
-
-	if(Stepper_Motor_1.Control == Stepper_Motor_Configuration.Control.Enable)
+	if(TIM6 -> SR & TIM_SR_UIF)
 	{
-		if(Stepper_Motor_1.Direction == Stepper_Motor_Configuration.Direction.Forward)
+		TIM6 -> SR &= ~TIM_SR_UIF;
+
+		if(Stepper_Motor_1.Control == Stepper_Motor_Configuration.Control.Enable)
 		{
-			if(Stepper_Motor_1.Step_Mode == Stepper_Motor_Configuration.Step_Mode.Full_Step)
+			if(Stepper_Motor_1.Direction == Stepper_Motor_Configuration.Direction.Forward)
 			{
-				if(Stepper_Motor_1.Last_Step < Stepper_Motor_1.Final_Step)
+				if(Stepper_Motor_1.Step_Mode == Stepper_Motor_Configuration.Step_Mode.Full_Step)
 				{
-					GPIOA -> BSRR = Stepper_Motor_Configuration.Full_Step_Sequence[Stepper_Motor_1.Step % 4];
-					Stepper_Motor_1.Last_Step +=1;
-					Stepper_Motor_1.Step += 1;
+					if(Stepper_Motor_1.Last_Step < Stepper_Motor_1.Final_Step)
+					{
+						GPIOA -> BSRR = Stepper_Motor_Configuration.Full_Step_Sequence[Stepper_Motor_1.Step % 4];
+						Stepper_Motor_1.Last_Step +=1;
+						Stepper_Motor_1.Step += 1;
+					}
+					else
+					{
+						Stepper_Motor_1.Step = 0;
+						Stepper_Motor_1.Control = Stepper_Motor_Configuration.Control.Disable;
+					}
 				}
-				else
+				else if(Stepper_Motor_1.Step_Mode == Stepper_Motor_Configuration.Step_Mode.Half_Step)
 				{
-					Stepper_Motor_1.Step = 0;
-					Stepper_Motor_1.Control = Stepper_Motor_Configuration.Control.Disable;
+					if(Stepper_Motor_1.Last_Step < Stepper_Motor_1.Final_Step)
+					{
+						GPIOA -> BSRR = Stepper_Motor_Configuration.Half_Step_Sequence[Stepper_Motor_1.Step % 8];
+						Stepper_Motor_1.Last_Step +=1;
+						Stepper_Motor_1.Step += 1;
+					}
+					else
+					{
+						Stepper_Motor_1.Step = 0;
+						Stepper_Motor_1.Control = Stepper_Motor_Configuration.Control.Disable;
+					}
+				}
+				else if(Stepper_Motor_1.Step_Mode == Stepper_Motor_Configuration.Step_Mode._1_4_Step)
+				{
+					if(Stepper_Motor_1.Last_Step < Stepper_Motor_1.Final_Step)
+					{
+						GPIOA -> BSRR = Stepper_Motor_Configuration._1_4_Step_Sequence[Stepper_Motor_1.Step % 12];
+						Stepper_Motor_1.Last_Step +=1;
+						Stepper_Motor_1.Step += 1;
+					}
+					else
+					{
+						Stepper_Motor_1.Step = 0;
+						Stepper_Motor_1.Control = Stepper_Motor_Configuration.Control.Disable;
+					}
 				}
 			}
-			else if(Stepper_Motor_1.Step_Mode == Stepper_Motor_Configuration.Step_Mode.Half_Step)
+			else if(Stepper_Motor_1.Direction == Stepper_Motor_Configuration.Direction.Reverse)
 			{
-				if(Stepper_Motor_1.Last_Step < Stepper_Motor_1.Final_Step)
-				{
-					GPIOA -> BSRR = Stepper_Motor_Configuration.Half_Step_Sequence[Stepper_Motor_1.Step % 8];
-					Stepper_Motor_1.Last_Step +=1;
-					Stepper_Motor_1.Step += 1;
-				}
-				else
-				{
-					Stepper_Motor_1.Step = 0;
-					Stepper_Motor_1.Control = Stepper_Motor_Configuration.Control.Disable;
-				}
-			}
-			else if(Stepper_Motor_1.Step_Mode == Stepper_Motor_Configuration.Step_Mode._1_4_Step)
-			{
-				if(Stepper_Motor_1.Last_Step < Stepper_Motor_1.Final_Step)
-				{
-					GPIOA -> BSRR = Stepper_Motor_Configuration._1_4_Step_Sequence[Stepper_Motor_1.Step % 12];
-					Stepper_Motor_1.Last_Step +=1;
-					Stepper_Motor_1.Step += 1;
-				}
-				else
-				{
-					Stepper_Motor_1.Step = 0;
-					Stepper_Motor_1.Control = Stepper_Motor_Configuration.Control.Disable;
-				}
+
 			}
 		}
-		else if(Stepper_Motor_1.Direction == Stepper_Motor_Configuration.Direction.Backward)
-		{
-
-		}
-
-
-
-
 	}
-
 }
 
 
