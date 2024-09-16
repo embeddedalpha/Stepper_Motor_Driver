@@ -58,6 +58,7 @@ static const struct Stepper_Motor_Configuration
 
 		.Half_Step_Sequence_Reverse = {0xF7FA0005, 0xF7F80007, 0xF7F90006, 0xF7F1000E, 0xF7F5000A, 0xF7F2000D, 0xF7F60009, 0xF7F80007},
 
+		.Full_Step_Sequence_Reverse = {0xFFFA0005, 0xFFF90006, 0xFFF5000A, 0xFFF60009},
 };
 
 
