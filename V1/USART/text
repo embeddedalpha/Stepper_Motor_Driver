@@ -1,0 +1,26 @@
+		xUSART1_RX.Request = DMA_Configuration.Request.USART1_TX;
+		xUSART1_RX.circular_mode = DMA_Configuration.Circular_Mode.Disable;
+		xUSART1_RX.flow_control = DMA_Configuration.Flow_Control.DMA_Control;
+		xUSART1_RX.interrupts = DMA_Configuration.DMA_Interrupts.Transfer_Complete | DMA_Configuration.DMA_Interrupts.Transfer_Error;
+		xUSART1_RX.memory_data_size = DMA_Configuration.Memory_Data_Size.byte;
+		xUSART1_RX.peripheral_data_size = DMA_Configuration.Peripheral_Data_Size.byte;
+		xUSART1_RX.peripheral_pointer_increment = DMA_Configuration.Peripheral_Pointer_Increment.Disable;
+		xUSART1_RX.memory_pointer_increment = DMA_Configuration.Memory_Pointer_Increment.Disable;
+		xUSART1_RX.priority_level = DMA_Configuration.Priority_Level.High;
+		xUSART1_RX.transfer_direction = DMA_Configuration.Transfer_Direction.Peripheral_to_memory;
+		DMA_Init(&xUSART1_RX);
+		
+		xUSART1_RX.memory_address = (uint32_t)&rx_buffer;
+		xUSART1_RX.peripheral_address = USART1->DR;
+		xUSART1_RX.buffer_length = length;
+		DMA_Set_Target(&xUSART1_RX);
+		DMA_Set_Trigger(&xUSART1_RX);
+
+		if(config->Port == USART1)
+		{
+			while((USART1_RX_DMA_Flag.Transfer_Complete_Flag == false))
+			{
+				if(USART1_RX_DMA_Flag.Transfer_Error_Flag == true) {return -1;}
+			}
+			USART1_RX_DMA_Flag.Transfer_Complete_Flag = false;
+		}
